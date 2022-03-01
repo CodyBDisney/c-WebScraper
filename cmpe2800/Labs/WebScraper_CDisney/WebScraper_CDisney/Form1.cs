@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.IO;
 using static System.Diagnostics.Trace;
+using System.Net;
 
 namespace WebScraper_CDisney
 {
@@ -56,12 +58,13 @@ namespace WebScraper_CDisney
         }
 
         //------------------Load URL------------------
-        private void UI_Button_Load_Click(object sender, EventArgs e)
+        async private void UI_Button_Load_Click(object sender, EventArgs e)
         {
-            Regex reg = new Regex(@"^http[s]?:\/\/(www\.)?(?'part'(.*)?\/)*(?'name'.*)\.(?'extension'.*)"); //should parse out links, and retreives the website name and extension
+            //should parse out links, and retreives the website name and extension
+            Regex reg = new Regex(@"http[s]?:\/\/(www\.)?(?'part'(.*)?\/)*(?'name'.*)(?'extension'\..*)"); 
 
             string testUrl = UI_URLBox.Text;
-
+            WriteLine(testUrl);
             if (reg.IsMatch(testUrl))
             {
                 MatchCollection matches = reg.Matches(testUrl);
@@ -69,12 +72,39 @@ namespace WebScraper_CDisney
                 foreach(Match match in matches)
                 {
                     WriteLine($"{match}, {match.Groups["name"]}, {match.Groups["extension"]}");
+
+                    await Task.Run(() => PrintHTML(match.ToString()));
                 }
             }
         }
 
         ////------------------Helpers------------------
 
+        private async Task PrintHTML(string url)
+        {
+            WriteLine("Started printing");
+            WebClient client = new WebClient();
+            var x = await client.OpenReadTaskAsync(@"http:\\www.arstechnica.com");
+            WriteLine($"Done! {x}");
+            StreamReader rdr = new StreamReader(x);
+            GetLinks(rdr.ReadToEnd());
+        }
 
+        private List<string> GetLinks(string file)
+        {
+            Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\.(png|jpg|jpeg))");
+
+            MatchCollection matches = reg.Matches(file);
+
+            List<string> images = new List<string>();
+
+            foreach(Match match in matches)
+            {
+                WriteLine(match);
+                images.Add(match.ToString());
+            }
+
+            return images;
+        }
     }
 }
