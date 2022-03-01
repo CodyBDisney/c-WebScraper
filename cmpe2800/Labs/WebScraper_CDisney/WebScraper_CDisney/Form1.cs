@@ -7,6 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Linq;
+using System.Text.RegularExpressions;
+using static System.Diagnostics.Trace;
 
 namespace WebScraper_CDisney
 {
@@ -55,7 +58,19 @@ namespace WebScraper_CDisney
         //------------------Load URL------------------
         private void UI_Button_Load_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            Regex reg = new Regex(@"^http[s]?:\/\/(www\.)?(?'part'(.*)?\/)*(?'name'.*)\.(?'extension'.*)"); //should parse out links, and retreives the website name and extension
+
+            string testUrl = UI_URLBox.Text;
+
+            if (reg.IsMatch(testUrl))
+            {
+                MatchCollection matches = reg.Matches(testUrl);
+
+                foreach(Match match in matches)
+                {
+                    WriteLine($"{match}, {match.Groups["name"]}, {match.Groups["extension"]}");
+                }
+            }
         }
 
         ////------------------Helpers------------------
