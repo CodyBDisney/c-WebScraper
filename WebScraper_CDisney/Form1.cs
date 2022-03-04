@@ -87,12 +87,15 @@ namespace WebScraper_CDisney
             var x = await client.OpenReadTaskAsync(@"http:\\www.arstechnica.com");
             WriteLine($"Done! {x}");
             StreamReader rdr = new StreamReader(x);
+            //Console.WriteLine(rdr.ReadToEnd());
             GetLinks(rdr.ReadToEnd());
         }
 
         private List<string> GetLinks(string file)
         {
-            Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\.(png|jpg|jpeg))");
+            WriteLine("Getting links");
+            //Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\..*?(/|\\| )*?)*");
+            Regex reg = new Regex("\"" + @"http[s]?(.*?)*" + "\"");
 
             MatchCollection matches = reg.Matches(file);
 
