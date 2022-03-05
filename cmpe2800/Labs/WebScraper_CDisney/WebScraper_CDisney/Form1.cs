@@ -113,6 +113,19 @@ namespace WebScraper_CDisney
             List<CustomImage> imageLinks = GetImageLinks(links); //pulls out only image links
 
             //display information
+            UI_ListBox.Items.Add($"{links.Count()} links found.");
+            UI_ListBox.Items.Add($"{imageLinks.Count()} images found.");
+           
+            //find number of different image types
+            int extensionCount = (from n in imageLinks select n.Extension).Distinct().Count();
+
+            UI_ListBox.Items.Add($"{extensionCount} different image types proccessed.");
+
+            //find number of duplicate image links
+
+            int duplicateImages = imageLinks.Count() - imageLinks.Distinct().Count();
+
+            UI_ListBox.Items.Add($"{duplicateImages} duplicate images found");
 
             //open file dialog for download location
 
