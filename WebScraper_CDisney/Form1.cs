@@ -17,6 +17,9 @@ namespace WebScraper_CDisney
 {
     public partial class Form1 : Form
     {
+        //members
+        List<Task> _activeDownloads = new List<Task>(); //List of tasks dowloading images
+
         public Form1()
         {
             InitializeComponent();
@@ -58,13 +61,18 @@ namespace WebScraper_CDisney
         }
 
         //------------------Load URL------------------
+        /// <summary>
+        /// Button click handler for the load website button, starts the proccess to retrieve images
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         async private void UI_Button_Load_Click(object sender, EventArgs e)
         {
             //should parse out links, and retreives the website name and extension
             Regex reg = new Regex(@"http[s]?:\/\/(www\.)?(?'part'(.*)?\/)*(?'name'.*)(?'extension'\..*)"); 
 
             string testUrl = UI_URLBox.Text;
-            WriteLine(testUrl);
+            
             if (reg.IsMatch(testUrl))
             {
                 MatchCollection matches = reg.Matches(testUrl);
@@ -73,27 +81,46 @@ namespace WebScraper_CDisney
                 {
                     WriteLine($"{match}, {match.Groups["name"]}, {match.Groups["extension"]}");
 
-                    await Task.Run(() => PrintHTML(match.ToString()));
+                    string message = await GetWebsite(match.ToString());
                 }
             }
         }
 
         ////------------------Helpers------------------
 
-        private async Task PrintHTML(string url)
+        private async Task<string> GetWebsite(string url)
         {
+            string messageString = "An error has occurred"; //string to display message after proccess stops
+
+            //grab html from website url
             WriteLine("Started printing");
             WebClient client = new WebClient();
-            var x = await client.OpenReadTaskAsync(@"http:\\www.arstechnica.com");
+
+            var x = await client.OpenReadTaskAsync(url);
             WriteLine($"Done! {x}");
+
+            //open a streamreader to read html
             StreamReader rdr = new StreamReader(x);
-            //Console.WriteLine(rdr.ReadToEnd());
-            GetLinks(rdr.ReadToEnd());
+            
+            //get links and image links from html
+            List<string> links = GetLinks(rdr.ReadToEnd()); //gets all links
+
+            List<string> imageLinks = GetImageLinks(links); //pulls out only image links
+
+            //display information
+
+            //open file dialog for download location
+
+            //start downloading files
+
+            //done
+            return messageString;
+            
         }
 
         private List<string> GetLinks(string file)
         {
-            WriteLine("Getting links");
+            WriteLine("----------Getting links----------");
             //Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\..*?(/|\\| )*?)*");
             Regex reg = new Regex("\"" + @"http[s]?(.*?)*" + "\"");
 
@@ -104,10 +131,28 @@ namespace WebScraper_CDisney
             foreach(Match match in matches)
             {
                 WriteLine(match);
-                images.Add(match.ToString());
+                images.Add(match.ToString().Replace('\"',' ').Trim()); //replace and trim remove quotations from html
             }
 
             return images;
+        }
+
+        private List<string> GetImageLinks(List<string> links)
+        {
+            WriteLine("----------Getting image links----------");
+            string[] goodExtensions = new string[] { "jpg", "png", "jpeg", "ico" };
+
+            var imageLinks = from n in links
+                             where goodExtensions.Contains(n.Split('.').Last())
+                             select n;
+
+
+            foreach(string n in imageLinks)
+            {
+                WriteLine(n);
+            }
+
+            return imageLinks.ToList();
         }
     }
 }
