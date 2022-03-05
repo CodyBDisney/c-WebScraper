@@ -88,6 +88,11 @@ namespace WebScraper_CDisney
 
         ////------------------Helpers------------------
 
+        /// <summary>
+        /// async method, currently does everything, but will eventually only retrieve website html
+        /// </summary>
+        /// <param name="url">url of website being searched</param>
+        /// <returns></returns>
         private async Task<string> GetWebsite(string url)
         {
             string messageString = "An error has occurred"; //string to display message after proccess stops
@@ -105,7 +110,7 @@ namespace WebScraper_CDisney
             //get links and image links from html
             List<string> links = GetLinks(rdr.ReadToEnd()); //gets all links
 
-            List<string> imageLinks = GetImageLinks(links); //pulls out only image links
+            List<CustomImage> imageLinks = GetImageLinks(links); //pulls out only image links
 
             //display information
 
@@ -118,6 +123,11 @@ namespace WebScraper_CDisney
             
         }
 
+        /// <summary>
+        /// Function to retrieve all http or https links from an html file
+        /// </summary>
+        /// <param name="file">html of a website</param>
+        /// <returns>List containing all http or https links</returns>
         private List<string> GetLinks(string file)
         {
             WriteLine("----------Getting links----------");
@@ -137,19 +147,24 @@ namespace WebScraper_CDisney
             return images;
         }
 
-        private List<string> GetImageLinks(List<string> links)
+        /// <summary>
+        /// Filters list of links to retrieve only links with image extensions
+        /// </summary>
+        /// <param name="links">List of links being filtered</param>
+        /// <returns></returns>
+        private List<CustomImage> GetImageLinks(List<string> links)
         {
             WriteLine("----------Getting image links----------");
             string[] goodExtensions = new string[] { "jpg", "png", "jpeg", "ico" };
 
             var imageLinks = from n in links
                              where goodExtensions.Contains(n.Split('.').Last())
-                             select n;
+                             select new CustomImage(n);
 
 
-            foreach(string n in imageLinks)
+            foreach(CustomImage n in imageLinks)
             {
-                WriteLine(n);
+                WriteLine(n.Url);
             }
 
             return imageLinks.ToList();
