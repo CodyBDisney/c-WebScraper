@@ -127,9 +127,40 @@ namespace WebScraper_CDisney
 
             UI_ListBox.Items.Add($"{duplicateImages} duplicate images found");
 
+
+            imageLinks = imageLinks.Distinct().ToList();
             //open file dialog for download location
 
+            FolderBrowserDialog dlg = new FolderBrowserDialog();
+            
+            if(dlg.ShowDialog() != DialogResult.OK)
+            {
+                return "Download cancelled";
+            }
+
+            string folderPath = dlg.SelectedPath;
+
             //start downloading files
+            List<Task> downloadTasks = new List<Task>();
+            
+            foreach(CustomImage image in imageLinks)
+            {
+                using(WebClient downloaClient = new WebClient())
+                downloadTasks.Add(downloaClient.DownloadFileTaskAsync(new Uri(image.Url), folderPath + "\\" + image.FileName));
+            }
+
+            int totalTasks = downloadTasks.Count();
+
+            while(downloadTasks.Count() > 0)
+            {
+                Task finished = await Task.WhenAny(downloadTasks);
+
+                downloadTasks.Remove(finished);
+
+                UI_ListBox.Items.Add($"Finished download {totalTasks - downloadTasks.Count()} / {totalTasks}");
+            }
+
+            UI_ListBox.Items.Add("Finished all downloads");
 
             //done
             return messageString;
@@ -182,5 +213,8 @@ namespace WebScraper_CDisney
 
             return imageLinks.ToList();
         }
+
+
+        
     }
 }
