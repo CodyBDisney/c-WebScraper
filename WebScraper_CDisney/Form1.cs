@@ -18,7 +18,9 @@ namespace WebScraper_CDisney
     {
         //members
         private List<Task> _activeDownloads = new List<Task>(); //List of tasks dowloading images
-        private string _downloadLocation;
+        private List<CustomImage> _images = new List<CustomImage>(); //list of images from a website
+        private string _downloadLocation; //path to download folder
+        BindingSource bSource = new BindingSource();
 
 
         public Form1()
@@ -45,6 +47,9 @@ namespace WebScraper_CDisney
             UI_TextBox_DownloadLocation.Text = "No path selected";
             UI_TextBox_DownloadLocation.ReadOnly = true;
 
+            //gridView
+            UI_Gridview.DataSource = bSource;
+
         }
 
         //----------Change Download Location----------
@@ -70,7 +75,7 @@ namespace WebScraper_CDisney
 
         private void UI_URLBox_TextChanged(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            
         }
 
         //------------------Form Methods------------------
@@ -87,22 +92,116 @@ namespace WebScraper_CDisney
         /// <param name="e"></param>
         async private void UI_Button_Load_Click(object sender, EventArgs e)
         {
+            //reset and prepare again
+            UI_Button_Load.Enabled = false;
             //should parse out links, and retreives the website name and extension
             Regex reg = new Regex(@"http[s]?:\/\/(www\.)?(?'part'(.*)?\/)*(?'name'.*)(?'extension'\..*)"); 
 
             string testUrl = UI_URLBox.Text;
             
-            if (reg.IsMatch(testUrl))
+            if (!reg.IsMatch(testUrl))
             {
-                MatchCollection matches = reg.Matches(testUrl);
+                UpdateListView("Invalid url loaded"); 
+            }
 
-                foreach(Match match in matches)
+            MatchCollection matches = reg.Matches(testUrl);
+
+            string url = matches[0].ToString();
+
+            await GetWebsite(url);
+
+            //-----display information-----
+            UpdateListView($"{_images.Count()} links found.");
+
+            //find number of duplicate image links
+
+            int duplicateImages = _images.Count() - _images.Distinct().Count();
+
+            UpdateListView($"{duplicateImages} duplicate links found");
+
+            //remove duplicate images
+            _images = _images.Distinct().ToList();
+
+            //find number of different image types
+            int extensionCount = (from n in _images select n.Extension).Distinct().Count();
+
+            UpdateListView($"{extensionCount} different image types proccessed.");
+
+            //-----Download byte arrays-----
+            Dictionary<Task, CustomImage> downloadTasks = new Dictionary<Task, CustomImage>();
+
+            foreach (CustomImage image in _images)
+            {
+                using (WebClient downloadClient = new WebClient())
                 {
-                    WriteLine($"{match}, {match.Groups["name"]}, {match.Groups["extension"]}");
-
-                    string message = await GetWebsite(match.ToString());
+                    downloadTasks.Add(downloadClient.DownloadDataTaskAsync(new Uri(url)),image);
                 }
             }
+
+            //Wait for downloads to finish
+            int totalTasks = downloadTasks.Count();
+
+            while (downloadTasks.Count() > 0)
+            {
+                Task<byte[]>finished = (Task<byte[]>)(await Task.WhenAny(downloadTasks.Keys));
+
+                downloadTasks[finished].Bytes = finished.Result;
+
+                downloadTasks.Remove(finished);
+
+                UpdateListView($"Finished retrieving image {totalTasks - downloadTasks.Count()} / {totalTasks}");
+
+            }
+
+            //Download to a location
+            if (_downloadLocation == null)
+            {
+                while (!ChangeDownloadLocation())
+                {
+                    UpdateListView("Please select a location to download to.");
+                }
+            }
+
+            string folderName = $"{url.Split('/')[2]}_{DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss")}";
+
+            //find duplicate images
+
+            //store images
+            System.IO.Directory.CreateDirectory($"{_downloadLocation}\\{folderName}"); //creates new folder
+
+            List<Task> saveTasks = new List<Task>();
+            foreach(CustomImage img in _images) //prepares tasks to download images
+            {
+                using (FileStream stream = new FileStream($"{_downloadLocation}\\{folderName}\\{img.FileName}", FileMode.CreateNew))
+                {
+                    saveTasks.Add(stream.WriteAsync(img.Bytes,0,img.Bytes.Length));
+                }
+            }
+
+
+            int totalImages = saveTasks.Count();
+            while(saveTasks.Count() > 0) //downlaods images and reports when completed
+            {
+                Task task = await Task.WhenAny(saveTasks);
+
+                UpdateListView($"Finished saving image {totalImages - saveTasks.Count()} / {totalImages}");
+
+                saveTasks.Remove(task);
+            }
+
+            //Display
+            var selectedData = from x in _images
+                               select new
+                               {
+                                   ImageName = x.FileName,
+                                   ImageType = x.Extension,
+                                   URL = x.Url
+                               };
+
+            bSource.DataSource = selectedData;
+
+            //re enable button
+            UI_Button_Load.Enabled = true;
         }
 
         ////------------------Helpers------------------
@@ -112,10 +211,8 @@ namespace WebScraper_CDisney
         /// </summary>
         /// <param name="url">url of website being searched</param>
         /// <returns></returns>
-        private async Task<string> GetWebsite(string url)
+        private async Task GetWebsite(string url)
         {
-            string messageString = "An error has occurred"; //string to display message after proccess stops
-
             //grab html from website url
             WriteLine("Started printing");
             WebClient client = new WebClient();
@@ -128,70 +225,7 @@ namespace WebScraper_CDisney
 
             //get links and image links from html
             //WriteLine(rdr.ReadToEnd());
-            List<CustomImage> links = GetLinks(rdr.ReadToEnd()); //gets all links
-                       
-            foreach(CustomImage img in links)
-            {
-                WriteLine(img.Url);
-            }
-
-            //display information
-            UI_ListBox.Items.Add($"{links.Count()} links found.");
-           
-            //find number of different image types
-            int extensionCount = (from n in links select n.Extension).Distinct().Count();
-
-            UI_ListBox.Items.Add($"{extensionCount} different image types proccessed.");
-
-            //find number of duplicate image links
-
-            int duplicateImages = links.Count() - links.Distinct().Count();
-
-            UI_ListBox.Items.Add($"{duplicateImages} duplicate images found");
-
-
-            links = links.Distinct().ToList();
-            //open file dialog for download location
-
-            if(_downloadLocation == null)
-            {
-                while (!ChangeDownloadLocation())
-                {
-                    UI_ListBox.Items.Add("Please select a location to download to");
-                }
-            }
-
-
-            //start downloading files
-            List<Task> downloadTasks = new List<Task>();
-            
-            foreach(CustomImage image in links)
-            {
-                using(WebClient downloadClient = new WebClient())
-                {
-                    downloadTasks.Add(downloadClient.DownloadFileTaskAsync(new Uri(image.Url), _downloadLocation + "\\" + image.FileName));
-                }
-                    
-                
-            }
-
-            int totalTasks = downloadTasks.Count();
-
-            while(downloadTasks.Count() > 0)
-            {
-                Task finished = await Task.WhenAny(downloadTasks);
-
-                downloadTasks.Remove(finished);
-
-                UI_ListBox.Items.Add($"Finished download {totalTasks - downloadTasks.Count()} / {totalTasks}");
-            }
-
-            UI_ListBox.Items.Add("Finished all downloads");
-            
-
-            //done
-            return messageString;
-            
+            _images = GetLinks(rdr.ReadToEnd()); //gets all links
         }
 
         /// <summary>
@@ -228,6 +262,12 @@ namespace WebScraper_CDisney
             }
 
             return images;
+        }
+
+        private void UpdateListView(string message)
+        {
+            UI_ListBox.Items.Add(message);
+            UI_ListBox.TopIndex = UI_ListBox.Items.Count - 1;
         }
 
 

@@ -11,6 +11,7 @@ namespace WebScraper_CDisney
         public string Url;      //Full url of image
         public string Extension;//Extension of image
         public string FileName; //Name of image
+        public byte[] Bytes;    //byte array containing file data
 
         /// <summary>
         /// Cosntructor, takes url and parses necessary information
@@ -32,6 +33,20 @@ namespace WebScraper_CDisney
         {
             if (!(obj is CustomImage other)) throw new ArgumentException("Cannot compare different types");
             return Url.Equals(other.Url);
+        }
+
+        /// <summary>
+        /// Override of gethashcode to prevent hashing for comparison
+        /// </summary>
+        /// <returns>0</returns>
+        public override int GetHashCode()
+        {
+            return 0;
+        }
+
+        public bool BytesMatch(byte[] other)
+        {
+            return Bytes.SequenceEqual(other);
         }
     }
 }
