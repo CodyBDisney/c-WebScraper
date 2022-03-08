@@ -17,10 +17,9 @@ namespace WebScraper_CDisney
     public partial class Form1 : Form
     {
         //members
-        private List<Task> _activeDownloads = new List<Task>(); //List of tasks dowloading images
-        private List<CustomImage> _images = new List<CustomImage>(); //list of images from a website
-        private string _downloadLocation; //path to download folder
-        BindingSource bSource = new BindingSource(); //Binding source for datagridview
+        private List<CustomImage> _images = new List<CustomImage>();//list of images from a website
+        private string _downloadLocation;                           //path to download folder
+        BindingSource bSource = new BindingSource();                //Binding source for datagridview
 
 
         public Form1()
@@ -53,11 +52,20 @@ namespace WebScraper_CDisney
         }
 
         //----------Change Download Location----------
+        /// <summary>
+        /// changes download location
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void UI_Button_ChangeDownload_Click(object sender, EventArgs e)
         {
             ChangeDownloadLocation();
         }
 
+        /// <summary>
+        /// Changes folder path to download images to
+        /// </summary>
+        /// <returns>bool if change ws successful</returns>
         private bool ChangeDownloadLocation()
         {
             bool result = false;
@@ -73,6 +81,11 @@ namespace WebScraper_CDisney
             return result;
         }
 
+        /// <summary>
+        /// Called on text change in url box, checks if url is valid
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void UI_URLBox_TextChanged(object sender, EventArgs e)
         {
             //will put regex here to check if valid url entered
@@ -173,6 +186,34 @@ namespace WebScraper_CDisney
 
             }
 
+            //Find duplicate images
+
+            var duplicateGroups = from img in _images
+                                  group img by img.FileName into q
+                                  select q;
+
+
+            //remove duplicate images (same name and image)
+            int exactDupImages = 0;
+            foreach (var groups in duplicateGroups)
+            {
+                var sameImages = from i in groups
+                                 group i by i.Bytes into x
+                                 select x;
+
+                if(sameImages.Count() > 1)
+                {
+                    foreach (var something in sameImages.First())
+                    {
+                        _images.Remove(something);
+                        exactDupImages++;
+                    }
+                }
+                
+            }
+
+            UpdateListView($"Removed {exactDupImages} images that were the same");
+
             //Download to a location
             if (_downloadLocation == null)
             {
@@ -184,32 +225,8 @@ namespace WebScraper_CDisney
 
             string folderName = $"{url.Split('/')[2]}_{DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss")}";
 
-            //Find duplicate images
-
-            var duplicateGroups = from img in _images
-                                  group img by img.FileName into q
-                                  select q;
-
-            int exactDupImages = 0;
-            //remove duplicate images (same name and image)
-            foreach(var groups in duplicateGroups)
-            {
-                var sameImages = from i in groups
-                                 group i by i.Bytes into x
-                                 select x.First();
-
-                foreach(var something in sameImages)
-                {
-                    _images.Remove(something);
-                    exactDupImages++;
-                }
-            }
-
-            UpdateListView($"Removed {exactDupImages} images taht were the same");
-            
-
             //rename duplicate images
-            foreach(var group in duplicateGroups)
+            foreach (var group in duplicateGroups)
             {
                 var groupList = group.ToList();
                 if(groupList.Count() > 1)
@@ -240,7 +257,7 @@ namespace WebScraper_CDisney
             {
                 Task task = await Task.WhenAny(saveTasks);
 
-                UpdateListView($"Finished saving image {totalImages - saveTasks.Count()} / {totalImages}");
+                UpdateListView($"Finished saving image {totalImages - saveTasks.Count() + 1} / {totalImages}");
 
                 saveTasks.Remove(task);
             }
