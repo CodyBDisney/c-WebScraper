@@ -7,6 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+/////////////////////////////
+///
+/// Project: Lab02 - Web Scraper
+/// 
+/// Author: Cody Disney
+/// 
+/// Submission Code : CMPE2800_1212_L02
+/// 
+/// Revision History: See SVN
+/// 
+/////////////////////////////
 using System.Text.RegularExpressions;
 using System.IO;
 using static System.Diagnostics.Trace;

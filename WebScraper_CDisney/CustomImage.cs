@@ -1,4 +1,15 @@
-﻿using System;
+﻿/////////////////////////////
+///
+/// Project: Lab02 - Web Scraper
+/// 
+/// Author: Cody Disney
+/// 
+/// Submission Code : CMPE2800_1212_L02
+/// 
+/// Revision History: See SVN
+/// 
+/////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -42,11 +53,6 @@ namespace WebScraper_CDisney
         public override int GetHashCode()
         {
             return 0;
-        }
-
-        public bool BytesMatch(byte[] other)
-        {
-            return Bytes.SequenceEqual(other);
         }
     }
 }
