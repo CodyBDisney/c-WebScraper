@@ -298,17 +298,14 @@ namespace WebScraper_CDisney
         private async Task GetWebsite(string url)
         {
             //grab html from website url
-            WriteLine("Started printing");
             WebClient client = new WebClient();
 
             var x = await client.OpenReadTaskAsync(url);
-            WriteLine($"Done! {x}");
 
             //open a streamreader to read html
             StreamReader rdr = new StreamReader(x);
 
             //get links and image links from html
-            //WriteLine(rdr.ReadToEnd());
             _images = GetLinks(rdr.ReadToEnd()); //gets all links
         }
 
@@ -319,21 +316,14 @@ namespace WebScraper_CDisney
         /// <returns>List containing all http or https links</returns>
         private List<CustomImage> GetLinks(string file)
         {
-            WriteLine("----------Getting links----------");
             //Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\..*?(/|\\| )*?)*");
             Regex reg = new Regex("<img.*src( )*=( )*[\"\'](?'link'http[s]?://.*?..*?)[\"\']"); //grabs all image tags from html
 
             MatchCollection matches = reg.Matches(file);
 
             List<CustomImage> images = new List<CustomImage>();
-
-            if(matches.Count < 1)
-            {
-                WriteLine("No links found");
-            }
             foreach (Match match in matches)
             {
-                //WriteLine(match);
                 //linq grabs http or https link from link
                 var link = from l in match.ToString().Split(new char[] {'\"','\'' }) //split on double or single quotes
                            where l.StartsWith("http")
