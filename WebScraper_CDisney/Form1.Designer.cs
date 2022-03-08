@@ -35,9 +35,10 @@ namespace WebScraper_CDisney
             this.UI_Label_GridView = new System.Windows.Forms.Label();
             this.UI_Label_URLBox = new System.Windows.Forms.Label();
             this.UI_Button_Load = new System.Windows.Forms.Button();
-            this.UI_Button_Save = new System.Windows.Forms.Button();
-            this.UI_Button_Cancel = new System.Windows.Forms.Button();
             this.UI_Label_Listbox = new System.Windows.Forms.Label();
+            this.UI_TextBox_DownloadLocation = new System.Windows.Forms.TextBox();
+            this.UI_Button_ChangeDownload = new System.Windows.Forms.Button();
+            this.UI_Label_DownloadLocation = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.UI_Gridview)).BeginInit();
             this.SuspendLayout();
             // 
@@ -49,7 +50,7 @@ namespace WebScraper_CDisney
             this.UI_Gridview.Name = "UI_Gridview";
             this.UI_Gridview.RowHeadersWidth = 51;
             this.UI_Gridview.RowTemplate.Height = 24;
-            this.UI_Gridview.Size = new System.Drawing.Size(600, 304);
+            this.UI_Gridview.Size = new System.Drawing.Size(520, 304);
             this.UI_Gridview.TabIndex = 0;
             this.UI_Gridview.VirtualMode = true;
             // 
@@ -58,9 +59,9 @@ namespace WebScraper_CDisney
             this.UI_ListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.UI_ListBox.FormattingEnabled = true;
             this.UI_ListBox.ItemHeight = 16;
-            this.UI_ListBox.Location = new System.Drawing.Point(626, 117);
+            this.UI_ListBox.Location = new System.Drawing.Point(538, 117);
             this.UI_ListBox.Name = "UI_ListBox";
-            this.UI_ListBox.Size = new System.Drawing.Size(297, 244);
+            this.UI_ListBox.Size = new System.Drawing.Size(385, 244);
             this.UI_ListBox.TabIndex = 1;
             // 
             // UI_URLBox
@@ -98,44 +99,53 @@ namespace WebScraper_CDisney
             this.UI_Button_Load.Text = "button1";
             this.UI_Button_Load.UseVisualStyleBackColor = true;
             // 
-            // UI_Button_Save
-            // 
-            this.UI_Button_Save.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.UI_Button_Save.Location = new System.Drawing.Point(626, 368);
-            this.UI_Button_Save.Name = "UI_Button_Save";
-            this.UI_Button_Save.Size = new System.Drawing.Size(142, 52);
-            this.UI_Button_Save.TabIndex = 6;
-            this.UI_Button_Save.Text = "button2";
-            this.UI_Button_Save.UseVisualStyleBackColor = true;
-            // 
-            // UI_Button_Cancel
-            // 
-            this.UI_Button_Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.UI_Button_Cancel.Location = new System.Drawing.Point(781, 368);
-            this.UI_Button_Cancel.Name = "UI_Button_Cancel";
-            this.UI_Button_Cancel.Size = new System.Drawing.Size(142, 52);
-            this.UI_Button_Cancel.TabIndex = 7;
-            this.UI_Button_Cancel.Text = "button3";
-            this.UI_Button_Cancel.UseVisualStyleBackColor = true;
-            // 
             // UI_Label_Listbox
             // 
             this.UI_Label_Listbox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.UI_Label_Listbox.AutoSize = true;
-            this.UI_Label_Listbox.Location = new System.Drawing.Point(626, 91);
+            this.UI_Label_Listbox.Location = new System.Drawing.Point(535, 92);
             this.UI_Label_Listbox.Name = "UI_Label_Listbox";
             this.UI_Label_Listbox.Size = new System.Drawing.Size(46, 17);
             this.UI_Label_Listbox.TabIndex = 8;
             this.UI_Label_Listbox.Text = "label3";
+            // 
+            // UI_TextBox_DownloadLocation
+            // 
+            this.UI_TextBox_DownloadLocation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.UI_TextBox_DownloadLocation.Location = new System.Drawing.Point(538, 397);
+            this.UI_TextBox_DownloadLocation.Name = "UI_TextBox_DownloadLocation";
+            this.UI_TextBox_DownloadLocation.Size = new System.Drawing.Size(295, 22);
+            this.UI_TextBox_DownloadLocation.TabIndex = 9;
+            // 
+            // UI_Button_ChangeDownload
+            // 
+            this.UI_Button_ChangeDownload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.UI_Button_ChangeDownload.Location = new System.Drawing.Point(839, 397);
+            this.UI_Button_ChangeDownload.Name = "UI_Button_ChangeDownload";
+            this.UI_Button_ChangeDownload.Size = new System.Drawing.Size(75, 23);
+            this.UI_Button_ChangeDownload.TabIndex = 10;
+            this.UI_Button_ChangeDownload.Text = "button1";
+            this.UI_Button_ChangeDownload.UseVisualStyleBackColor = true;
+            // 
+            // UI_Label_DownloadLocation
+            // 
+            this.UI_Label_DownloadLocation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.UI_Label_DownloadLocation.AutoSize = true;
+            this.UI_Label_DownloadLocation.Location = new System.Drawing.Point(538, 377);
+            this.UI_Label_DownloadLocation.Name = "UI_Label_DownloadLocation";
+            this.UI_Label_DownloadLocation.Size = new System.Drawing.Size(46, 17);
+            this.UI_Label_DownloadLocation.TabIndex = 11;
+            this.UI_Label_DownloadLocation.Text = "label4";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(935, 432);
+            this.Controls.Add(this.UI_Label_DownloadLocation);
+            this.Controls.Add(this.UI_Button_ChangeDownload);
+            this.Controls.Add(this.UI_TextBox_DownloadLocation);
             this.Controls.Add(this.UI_Label_Listbox);
-            this.Controls.Add(this.UI_Button_Cancel);
-            this.Controls.Add(this.UI_Button_Save);
             this.Controls.Add(this.UI_Button_Load);
             this.Controls.Add(this.UI_Label_URLBox);
             this.Controls.Add(this.UI_Label_GridView);
@@ -159,9 +169,10 @@ namespace WebScraper_CDisney
         private System.Windows.Forms.Label UI_Label_GridView;
         private System.Windows.Forms.Label UI_Label_URLBox;
         private System.Windows.Forms.Button UI_Button_Load;
-        private System.Windows.Forms.Button UI_Button_Save;
-        private System.Windows.Forms.Button UI_Button_Cancel;
         private System.Windows.Forms.Label UI_Label_Listbox;
+        private System.Windows.Forms.TextBox UI_TextBox_DownloadLocation;
+        private System.Windows.Forms.Button UI_Button_ChangeDownload;
+        private System.Windows.Forms.Label UI_Label_DownloadLocation;
     }
 }
 

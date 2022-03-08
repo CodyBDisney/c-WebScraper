@@ -18,7 +18,7 @@ namespace WebScraper_CDisney
     {
         //members
         private List<Task> _activeDownloads = new List<Task>(); //List of tasks dowloading images
-        private string _downloadLoction;
+        private string _downloadLocation;
 
 
         public Form1()
@@ -29,36 +29,54 @@ namespace WebScraper_CDisney
             UI_Label_URLBox.Text = "URL:";
             UI_Label_GridView.Text = "Loaded images:";
             UI_Label_Listbox.Text = "Notifications:";
+            UI_Label_DownloadLocation.Text = "Download Location:";
+
+            //Text input
+            UI_URLBox.TextChanged += UI_URLBox_TextChanged;
 
             //Load Button
             UI_Button_Load.Text = "Load";
             UI_Button_Load.Click += UI_Button_Load_Click;
 
-            //Save Button
-            UI_Button_Save.Text = "Save";
-            UI_Button_Save.Click += UI_Button_Save_Click;
+            //Download Location
+            UI_Button_ChangeDownload.Text = "Change";
+            UI_Button_ChangeDownload.Click += UI_Button_ChangeDownload_Click;
 
-            //Cancel Button
-            UI_Button_Cancel.Text = "Cancel";
-            UI_Button_Cancel.Click += UI_Button_Cancel_Click;
+            UI_TextBox_DownloadLocation.Text = "No path selected";
+            UI_TextBox_DownloadLocation.ReadOnly = true;
+
+        }
+
+        //----------Change Download Location----------
+        private void UI_Button_ChangeDownload_Click(object sender, EventArgs e)
+        {
+            ChangeDownloadLocation();
+        }
+
+        private bool ChangeDownloadLocation()
+        {
+            bool result = false;
+
+            FolderBrowserDialog dlg = new FolderBrowserDialog();
+            if(dlg.ShowDialog() == DialogResult.OK)
+            {
+                _downloadLocation = dlg.SelectedPath;
+                result = true;
+            }
+            UI_TextBox_DownloadLocation.Text = _downloadLocation;
+
+            return result;
+        }
+
+        private void UI_URLBox_TextChanged(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         //------------------Form Methods------------------
         private void Form1_Load(object sender, EventArgs e)
         {
 
-        }
-
-        //------------------Cancel Loading------------------
-        private void UI_Button_Cancel_Click(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        //------------------Save Images------------------
-        private void UI_Button_Save_Click(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         //------------------Load URL------------------
@@ -135,14 +153,14 @@ namespace WebScraper_CDisney
             links = links.Distinct().ToList();
             //open file dialog for download location
 
-            FolderBrowserDialog dlg = new FolderBrowserDialog();
-            
-            if(dlg.ShowDialog() != DialogResult.OK)
+            if(_downloadLocation == null)
             {
-                return "Download cancelled";
+                while (!ChangeDownloadLocation())
+                {
+                    UI_ListBox.Items.Add("Please select a location to download to");
+                }
             }
 
-            string folderPath = dlg.SelectedPath;
 
             //start downloading files
             List<Task> downloadTasks = new List<Task>();
@@ -151,7 +169,7 @@ namespace WebScraper_CDisney
             {
                 using(WebClient downloadClient = new WebClient())
                 {
-                    downloadTasks.Add(downloadClient.DownloadFileTaskAsync(new Uri(image.Url), folderPath + "\\" + image.FileName));
+                    downloadTasks.Add(downloadClient.DownloadFileTaskAsync(new Uri(image.Url), _downloadLocation + "\\" + image.FileName));
                 }
                     
                 
@@ -212,28 +230,6 @@ namespace WebScraper_CDisney
             return images;
         }
 
-        /// <summary>
-        /// Filters list of links to retrieve only links with image extensions
-        /// </summary>
-        /// <param name="links">List of links being filtered</param>
-        /// <returns></returns>
-        private List<CustomImage> GetImageLinks(List<string> links)
-        {
-            WriteLine("----------Getting image links----------");
-            string[] goodExtensions = new string[] { "jpg", "png", "jpeg", "ico" };
-
-            var imageLinks = from n in links
-                             where goodExtensions.Contains(n.Split('.').Last())
-                             select new CustomImage(n);
-
-
-            foreach(CustomImage n in imageLinks)
-            {
-                WriteLine(n.Url);
-            }
-
-            return imageLinks.ToList();
-        }
 
 
         
