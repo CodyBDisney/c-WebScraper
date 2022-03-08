@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
 using static System.Diagnostics.Trace;
@@ -18,7 +17,9 @@ namespace WebScraper_CDisney
     public partial class Form1 : Form
     {
         //members
-        List<Task> _activeDownloads = new List<Task>(); //List of tasks dowloading images
+        private List<Task> _activeDownloads = new List<Task>(); //List of tasks dowloading images
+        private string _downloadLoction;
+
 
         public Form1()
         {
@@ -106,29 +107,32 @@ namespace WebScraper_CDisney
 
             //open a streamreader to read html
             StreamReader rdr = new StreamReader(x);
-            
-            //get links and image links from html
-            List<string> links = GetLinks(rdr.ReadToEnd()); //gets all links
 
-            List<CustomImage> imageLinks = GetImageLinks(links); //pulls out only image links
+            //get links and image links from html
+            //WriteLine(rdr.ReadToEnd());
+            List<CustomImage> links = GetLinks(rdr.ReadToEnd()); //gets all links
+                       
+            foreach(CustomImage img in links)
+            {
+                WriteLine(img.Url);
+            }
 
             //display information
             UI_ListBox.Items.Add($"{links.Count()} links found.");
-            UI_ListBox.Items.Add($"{imageLinks.Count()} images found.");
            
             //find number of different image types
-            int extensionCount = (from n in imageLinks select n.Extension).Distinct().Count();
+            int extensionCount = (from n in links select n.Extension).Distinct().Count();
 
             UI_ListBox.Items.Add($"{extensionCount} different image types proccessed.");
 
             //find number of duplicate image links
 
-            int duplicateImages = imageLinks.Count() - imageLinks.Distinct().Count();
+            int duplicateImages = links.Count() - links.Distinct().Count();
 
             UI_ListBox.Items.Add($"{duplicateImages} duplicate images found");
 
 
-            imageLinks = imageLinks.Distinct().ToList();
+            links = links.Distinct().ToList();
             //open file dialog for download location
 
             FolderBrowserDialog dlg = new FolderBrowserDialog();
@@ -143,10 +147,14 @@ namespace WebScraper_CDisney
             //start downloading files
             List<Task> downloadTasks = new List<Task>();
             
-            foreach(CustomImage image in imageLinks)
+            foreach(CustomImage image in links)
             {
-                using(WebClient downloaClient = new WebClient())
-                downloadTasks.Add(downloaClient.DownloadFileTaskAsync(new Uri(image.Url), folderPath + "\\" + image.FileName));
+                using(WebClient downloadClient = new WebClient())
+                {
+                    downloadTasks.Add(downloadClient.DownloadFileTaskAsync(new Uri(image.Url), folderPath + "\\" + image.FileName));
+                }
+                    
+                
             }
 
             int totalTasks = downloadTasks.Count();
@@ -161,6 +169,7 @@ namespace WebScraper_CDisney
             }
 
             UI_ListBox.Items.Add("Finished all downloads");
+            
 
             //done
             return messageString;
@@ -172,20 +181,32 @@ namespace WebScraper_CDisney
         /// </summary>
         /// <param name="file">html of a website</param>
         /// <returns>List containing all http or https links</returns>
-        private List<string> GetLinks(string file)
+        private List<CustomImage> GetLinks(string file)
         {
             WriteLine("----------Getting links----------");
             //Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\..*?(/|\\| )*?)*");
-            Regex reg = new Regex("\"" + @"http[s]?(.*?)*" + "\"");
+            Regex reg = new Regex("<img.*src( )*=( )*[\"\'](?'link'http[s]?://.*?..*?)[\"\']"); //grabs all image tags from html
 
             MatchCollection matches = reg.Matches(file);
 
-            List<string> images = new List<string>();
+            List<CustomImage> images = new List<CustomImage>();
 
-            foreach(Match match in matches)
+            if(matches.Count < 1)
             {
-                WriteLine(match);
-                images.Add(match.ToString().Replace('\"',' ').Trim()); //replace and trim remove quotations from html
+                WriteLine("No links found");
+            }
+            foreach (Match match in matches)
+            {
+                //WriteLine(match);
+                //linq grabs http or https link from link
+                var link = from l in match.ToString().Split(new char[] {'\"','\'' }) //split on double or single quotes
+                           where l.StartsWith("http")
+                           select l;
+                
+                foreach(string l in link)
+                {
+                    images.Add(new CustomImage(l));
+                }
             }
 
             return images;
