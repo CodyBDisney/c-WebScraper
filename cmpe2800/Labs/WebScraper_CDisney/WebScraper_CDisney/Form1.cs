@@ -134,7 +134,7 @@ namespace WebScraper_CDisney
             UpdateListView($"{_images.Count()} links found.");
 
             //find number of duplicate image links
-
+            
             int duplicateImages = _images.Count() - _images.Distinct().Count();
 
             UpdateListView($"{duplicateImages} duplicate links found");
@@ -185,6 +185,42 @@ namespace WebScraper_CDisney
             string folderName = $"{url.Split('/')[2]}_{DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss")}";
 
             //Find duplicate images
+
+            var duplicateGroups = from img in _images
+                                  group img by img.FileName into q
+                                  select q;
+
+            int exactDupImages = 0;
+            //remove duplicate images (same name and image)
+            foreach(var groups in duplicateGroups)
+            {
+                var sameImages = from i in groups
+                                 group i by i.Bytes into x
+                                 select x.First();
+
+                foreach(var something in sameImages)
+                {
+                    _images.Remove(something);
+                    exactDupImages++;
+                }
+            }
+
+            UpdateListView($"Removed {exactDupImages} images taht were the same");
+            
+
+            //rename duplicate images
+            foreach(var group in duplicateGroups)
+            {
+                var groupList = group.ToList();
+                if(groupList.Count() > 1)
+                {
+                    for (int i = 1; i < groupList.Count(); i++)
+                    {
+                        groupList[i].FileName += $"_({i})";
+                    }
+                }
+                
+            }
 
             //Save images
             System.IO.Directory.CreateDirectory($"{_downloadLocation}\\{folderName}"); //creates new folder
