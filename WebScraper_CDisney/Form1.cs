@@ -20,7 +20,7 @@ namespace WebScraper_CDisney
         private List<Task> _activeDownloads = new List<Task>(); //List of tasks dowloading images
         private List<CustomImage> _images = new List<CustomImage>(); //list of images from a website
         private string _downloadLocation; //path to download folder
-        BindingSource bSource = new BindingSource();
+        BindingSource bSource = new BindingSource(); //Binding source for datagridview
 
 
         public Form1()
@@ -75,13 +75,33 @@ namespace WebScraper_CDisney
 
         private void UI_URLBox_TextChanged(object sender, EventArgs e)
         {
-            
+            //will put regex here to check if valid url entered
+            //check if any text in url box
+            if (UI_URLBox.Text.Length == 0)
+            {
+                UI_URLBox.ForeColor = Color.DarkGray;
+                UI_Button_Load.Enabled = false;
+            }
+
+            Regex reg = new Regex(@"http[s]?:\/\/(www\.)?(?'part'(.*)?\/)*(?'name'.*)(?'extension'\..*)");
+
+            //see if url entered is valid, enable loading accordingly
+            if (reg.IsMatch(UI_URLBox.Text))
+            {
+                UI_URLBox.ForeColor = Color.Green;
+                UI_Button_Load.Enabled = true;
+            }
+            else
+            {
+                UI_URLBox.ForeColor = Color.Red;
+                UI_Button_Load.Enabled = false;
+            }
         }
 
         //------------------Form Methods------------------
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            
         }
 
         //------------------Load URL------------------
@@ -97,14 +117,14 @@ namespace WebScraper_CDisney
             //should parse out links, and retreives the website name and extension
             Regex reg = new Regex(@"http[s]?:\/\/(www\.)?(?'part'(.*)?\/)*(?'name'.*)(?'extension'\..*)"); 
 
-            string testUrl = UI_URLBox.Text;
             
-            if (!reg.IsMatch(testUrl))
+            if (!reg.IsMatch(UI_URLBox.Text))
             {
-                UpdateListView("Invalid url loaded"); 
+                UpdateListView("Invalid url loaded");
+                return;
             }
 
-            MatchCollection matches = reg.Matches(testUrl);
+            MatchCollection matches = reg.Matches(UI_URLBox.Text);
 
             string url = matches[0].ToString();
 
@@ -164,9 +184,9 @@ namespace WebScraper_CDisney
 
             string folderName = $"{url.Split('/')[2]}_{DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss")}";
 
-            //find duplicate images
+            //Find duplicate images
 
-            //store images
+            //Save images
             System.IO.Directory.CreateDirectory($"{_downloadLocation}\\{folderName}"); //creates new folder
 
             List<Task> saveTasks = new List<Task>();
@@ -189,7 +209,7 @@ namespace WebScraper_CDisney
                 saveTasks.Remove(task);
             }
 
-            //Display
+            //Display images to gridview
             var selectedData = from x in _images
                                select new
                                {
@@ -200,7 +220,7 @@ namespace WebScraper_CDisney
 
             bSource.DataSource = selectedData;
 
-            //re enable button
+            //re-enable load button
             UI_Button_Load.Enabled = true;
         }
 
@@ -264,6 +284,10 @@ namespace WebScraper_CDisney
             return images;
         }
 
+        /// <summary>
+        /// Updates text in listview, and scrolls to keep up
+        /// </summary>
+        /// <param name="message">message to put into listview</param>
         private void UpdateListView(string message)
         {
             UI_ListBox.Items.Add(message);
