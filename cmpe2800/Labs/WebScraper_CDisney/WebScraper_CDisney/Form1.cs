@@ -21,8 +21,6 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Net;
 
-using static System.Diagnostics.Trace;
-
 namespace WebScraper_CDisney
 {
     public partial class Form1 : Form
@@ -139,7 +137,12 @@ namespace WebScraper_CDisney
         {
             //reset and prepare again
             UI_Button_Load.Enabled = false;
-            //should parse out links, and retreives the website name and extension
+            UI_ListBox.Items.Clear();
+            bSource.DataSource = null;
+
+            /******************************************
+             *   Parse website link from textbox
+             ******************************************/
             Regex reg = new Regex(@"http[s]?:\/\/(www\.)?(?'part'(.*)?\/)*(?'name'.*)(?'extension'\..*)"); 
 
             
@@ -155,7 +158,9 @@ namespace WebScraper_CDisney
 
             await GetWebsite(url);
 
-            //-----display information-----
+            /******************************************
+             *           Display Info
+             ******************************************/
             UpdateListView($"{_images.Count()} links found.");
 
             //find number of duplicate image links
@@ -164,7 +169,9 @@ namespace WebScraper_CDisney
 
             UpdateListView($"{duplicateImages} duplicate links found");
 
-            //remove duplicate images
+            /******************************************
+             *       Remove images with same url
+             ******************************************/
             _images = _images.Distinct().ToList();
 
             //find number of different image types
@@ -172,7 +179,9 @@ namespace WebScraper_CDisney
 
             UpdateListView($"{extensionCount} different image types proccessed.");
 
-            //-----Download byte arrays-----
+            /******************************************
+             *        Get Byte arrays from url   
+             ******************************************/
             Dictionary<Task, CustomImage> downloadTasks = new Dictionary<Task, CustomImage>();
 
             foreach (CustomImage image in _images)
@@ -189,7 +198,16 @@ namespace WebScraper_CDisney
             while (downloadTasks.Count() > 0)
             {
                 Task<byte[]>finished = (Task<byte[]>)(await Task.WhenAny(downloadTasks.Keys));
+                
 
+
+                if (finished.Status != TaskStatus.RanToCompletion)
+                {
+                    UpdateListView($"Failed to download image: {downloadTasks[finished].FileName}");
+                    _images.Remove(downloadTasks[finished]);
+                    downloadTasks.Remove(finished);
+                    continue;
+                }
                 downloadTasks[finished].Bytes = finished.Result;
 
                 downloadTasks.Remove(finished);
@@ -198,20 +216,21 @@ namespace WebScraper_CDisney
 
             }
 
-            //Find duplicate images
-
+            /******************************************
+             *       Find duplicate image files    
+             ******************************************/
+            //Get images with the same name
             var duplicateGroups = from img in _images
                                   group img by img.FileName into q
                                   select q;
 
-            WriteLine("----------");
+
             List<CustomImage> imagesToRemove = new List<CustomImage>();
             foreach(var x in duplicateGroups)
             {
-                WriteLine(x.Key + ":");
                 var sameName = x.ToArray();
 
-                foreach(CustomImage img in sameName)
+                foreach(CustomImage img in sameName) //gets any images that have duplicate bytes of the first ones
                 {
                     var imgs = from i in sameName
                                where i.Bytes.SequenceEqual(img.Bytes) && i != img && !imagesToRemove.Contains(img)
@@ -227,9 +246,11 @@ namespace WebScraper_CDisney
                 _images.Remove(image);
             }
 
-            
-            //Download to a location
-            if (_downloadLocation == null)
+
+            /******************************************
+             *          Set Download Location 
+             ******************************************/
+            if (_downloadLocation == null) //set location if it hasnt already
             {
                 if (!ChangeDownloadLocation())
                 {
@@ -238,9 +259,11 @@ namespace WebScraper_CDisney
                 }
             }
 
-            string folderName = $"{url.Split('/')[2]}_{DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss")}";
+            string folderName = $"{url.Split('/')[2]}_{DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss")}"; //agreed formatting
 
-            //rename duplicate images
+            /******************************************
+             *      Rename Duplicate image names
+             ******************************************/
             foreach (var group in duplicateGroups)
             {
                 var groupList = group.ToList();
@@ -249,36 +272,40 @@ namespace WebScraper_CDisney
                     for (int i = 1; i < groupList.Count(); i++)
                     {
                         string namePart = groupList[i].FileName.Split('.')[0];
-                        groupList[i].FileName = $"{namePart}_({i}).{groupList[i].Extension}";
+                        groupList[i].FileName = $"{namePart}_({i}).{groupList[i].Extension}"; //adds number to images with dup names but diff bytes
                     }
                 }
                 
             }
 
 
-            //Save images
+            /******************************************
+             *        Save images to location
+             ******************************************/
             System.IO.Directory.CreateDirectory($"{_downloadLocation}\\{folderName}"); //creates new folder
 
             List<Task> saveTasks = new List<Task>();
             foreach(CustomImage img in _images) //prepares tasks to download images
             {
-                saveTasks.Add(SaveImage($"{_downloadLocation}\\{folderName}\\{img.FileName}", img));
+                saveTasks.Add(SaveImageAsync($"{_downloadLocation}\\{folderName}\\{img.FileName}", img));
             }
 
            
             
             
-            int totalImages = saveTasks.Count();
-            while(saveTasks.Count() > 0) //downlaods images and reports when completed
+            int totalImages = saveTasks.Count(); //saves total amount of images being saved for output
+
+            while(saveTasks.Count() > 0) //saves images and reports when completed
             {
                 Task task = await Task.WhenAny(saveTasks);
-                if (task.IsCompleted) System.Diagnostics.Trace.WriteLine($"Completed downloading an image");
                 UpdateListView($"Finished saving image {totalImages - saveTasks.Count() + 1} / {totalImages}");
 
                 saveTasks.Remove(task);
             }
-            
-            //Display images to gridview
+
+            /******************************************
+             *     Display image data to gridview
+             ******************************************/
             var selectedData = from x in _images
                                select new
                                {
@@ -354,7 +381,13 @@ namespace WebScraper_CDisney
             UI_ListBox.TopIndex = UI_ListBox.Items.Count - 1;
         }
 
-        private async Task SaveImage(string path, CustomImage img)
+        /// <summary>
+        /// Asynchronous method to save image to specified file path
+        /// </summary>
+        /// <param name="path">filepath to save image to</param>
+        /// <param name="img">image being saved</param>
+        /// <returns>Task to save image</returns>
+        private async Task SaveImageAsync(string path, CustomImage img)
         {
             using (FileStream stream = new FileStream(path, FileMode.OpenOrCreate))
             {
