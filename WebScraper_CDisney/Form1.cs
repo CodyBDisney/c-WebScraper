@@ -156,7 +156,11 @@ namespace WebScraper_CDisney
 
             string url = matches[0].ToString();
 
-            await GetWebsite(url);
+            if(!await GetWebsite(url))
+            {
+                UI_Button_Load.Enabled = true;
+                return;
+            }
 
             /******************************************
              *           Display Info
@@ -328,18 +332,29 @@ namespace WebScraper_CDisney
         /// </summary>
         /// <param name="url">url of website being searched</param>
         /// <returns></returns>
-        private async Task GetWebsite(string url)
+        private async Task<bool> GetWebsite(string url)
         {
             //grab html from website url
             WebClient client = new WebClient();
+            Stream x = null;
 
-            var x = await client.OpenReadTaskAsync(url);
-
+            try
+            {
+                x = await client.OpenReadTaskAsync(url);
+            }
+            catch(Exception ex)
+            {
+                UpdateListView("Website did not respond");
+                return false;
+            }
+            
             //open a streamreader to read html
             StreamReader rdr = new StreamReader(x);
 
             //get links and image links from html
             _images = GetLinks(rdr.ReadToEnd()); //gets all links
+
+            return true;
         }
 
         /// <summary>
