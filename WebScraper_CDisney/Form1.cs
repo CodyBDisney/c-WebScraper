@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-/////////////////////////////
+﻿/////////////////////////////
 ///
 /// Project: Lab02 - Web Scraper
 /// 
@@ -18,15 +9,25 @@ using System.Windows.Forms;
 /// Revision History: See SVN
 /// 
 /////////////////////////////
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.IO;
-using static System.Diagnostics.Trace;
 using System.Net;
+
+using static System.Diagnostics.Trace;
 
 namespace WebScraper_CDisney
 {
     public partial class Form1 : Form
     {
+
         //members
         private List<CustomImage> _images = new List<CustomImage>();//list of images from a website
         private string _downloadLocation;                           //path to download folder
@@ -36,7 +37,6 @@ namespace WebScraper_CDisney
         public Form1()
         {
             InitializeComponent();
-
             //Labels
             UI_Label_URLBox.Text = "URL:";
             UI_Label_GridView.Text = "Loaded images:";
@@ -59,6 +59,7 @@ namespace WebScraper_CDisney
 
             //gridView
             UI_Gridview.DataSource = bSource;
+            UI_Gridview.RowHeadersVisible = false;
 
         }
 
@@ -178,7 +179,7 @@ namespace WebScraper_CDisney
             {
                 using (WebClient downloadClient = new WebClient())
                 {
-                    downloadTasks.Add(downloadClient.DownloadDataTaskAsync(new Uri(url)),image);
+                    downloadTasks.Add(downloadClient.DownloadDataTaskAsync(new Uri(image.Url)),image);
                 }
             }
 
@@ -203,34 +204,37 @@ namespace WebScraper_CDisney
                                   group img by img.FileName into q
                                   select q;
 
-
-            //remove duplicate images (same name and image)
-            int exactDupImages = 0;
-            foreach (var groups in duplicateGroups)
+            WriteLine("----------");
+            List<CustomImage> imagesToRemove = new List<CustomImage>();
+            foreach(var x in duplicateGroups)
             {
-                var sameImages = from i in groups
-                                 group i by i.Bytes into x
-                                 select x;
+                WriteLine(x.Key + ":");
+                var sameName = x.ToArray();
 
-                if(sameImages.Count() > 1)
+                foreach(CustomImage img in sameName)
                 {
-                    foreach (var something in sameImages.First())
-                    {
-                        _images.Remove(something);
-                        exactDupImages++;
-                    }
+                    var imgs = from i in sameName
+                               where i.Bytes.SequenceEqual(img.Bytes) && i != img && !imagesToRemove.Contains(img)
+                               select i;
+
+                    imagesToRemove.AddRange(imgs);
                 }
-                
             }
 
-            UpdateListView($"Removed {exactDupImages} images that were the same");
+            //remove duplicate images (same name and image)
+            foreach (CustomImage image in imagesToRemove)
+            {
+                _images.Remove(image);
+            }
 
+            
             //Download to a location
             if (_downloadLocation == null)
             {
-                while (!ChangeDownloadLocation())
+                if (!ChangeDownloadLocation())
                 {
-                    UpdateListView("Please select a location to download to.");
+                    UpdateListView("Download cancelled");
+                    return;
                 }
             }
 
@@ -244,11 +248,13 @@ namespace WebScraper_CDisney
                 {
                     for (int i = 1; i < groupList.Count(); i++)
                     {
-                        groupList[i].FileName += $"_({i})";
+                        string namePart = groupList[i].FileName.Split('.')[0];
+                        groupList[i].FileName = $"{namePart}_({i}).{groupList[i].Extension}";
                     }
                 }
                 
             }
+
 
             //Save images
             System.IO.Directory.CreateDirectory($"{_downloadLocation}\\{folderName}"); //creates new folder
@@ -256,30 +262,30 @@ namespace WebScraper_CDisney
             List<Task> saveTasks = new List<Task>();
             foreach(CustomImage img in _images) //prepares tasks to download images
             {
-                using (FileStream stream = new FileStream($"{_downloadLocation}\\{folderName}\\{img.FileName}", FileMode.CreateNew))
-                {
-                    saveTasks.Add(stream.WriteAsync(img.Bytes,0,img.Bytes.Length));
-                }
+                saveTasks.Add(SaveImage($"{_downloadLocation}\\{folderName}\\{img.FileName}", img));
             }
 
-
+           
+            
+            
             int totalImages = saveTasks.Count();
             while(saveTasks.Count() > 0) //downlaods images and reports when completed
             {
                 Task task = await Task.WhenAny(saveTasks);
-
+                if (task.IsCompleted) System.Diagnostics.Trace.WriteLine($"Completed downloading an image");
                 UpdateListView($"Finished saving image {totalImages - saveTasks.Count() + 1} / {totalImages}");
 
                 saveTasks.Remove(task);
             }
-
+            
             //Display images to gridview
             var selectedData = from x in _images
                                select new
                                {
                                    ImageName = x.FileName,
                                    ImageType = x.Extension,
-                                   URL = x.Url
+                                   URL = x.Url,
+                                   Bytes = x.Bytes.Count()
                                };
 
             bSource.DataSource = selectedData;
@@ -348,7 +354,13 @@ namespace WebScraper_CDisney
             UI_ListBox.TopIndex = UI_ListBox.Items.Count - 1;
         }
 
-
+        private async Task SaveImage(string path, CustomImage img)
+        {
+            using (FileStream stream = new FileStream(path, FileMode.OpenOrCreate))
+            {
+                await stream.WriteAsync(img.Bytes, 0, img.Bytes.Length);
+            }
+        }
 
         
     }
