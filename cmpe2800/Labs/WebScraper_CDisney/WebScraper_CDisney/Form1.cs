@@ -162,6 +162,7 @@ namespace WebScraper_CDisney
                 return;
             }
 
+
             /******************************************
              *           Display Info
              ******************************************/
@@ -172,6 +173,8 @@ namespace WebScraper_CDisney
             int duplicateImages = _images.Count() - _images.Distinct().Count();
 
             UpdateListView($"{duplicateImages} duplicate links found");
+
+
 
             /******************************************
              *       Remove images with same url
@@ -201,7 +204,7 @@ namespace WebScraper_CDisney
 
             while (downloadTasks.Count() > 0)
             {
-                Task<byte[]>finished = (Task<byte[]>)(await Task.WhenAny(downloadTasks.Keys));
+                Task<byte[]> finished = (Task<byte[]>)(await Task.WhenAny(downloadTasks.Keys));
                 
 
 
