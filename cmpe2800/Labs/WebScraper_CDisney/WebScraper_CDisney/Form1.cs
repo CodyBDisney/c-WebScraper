@@ -166,6 +166,7 @@ namespace WebScraper_CDisney
             /******************************************
              *           Display Info
              ******************************************/
+            UpdateListView("\n-----\n");
             UpdateListView($"{_images.Count()} links found.");
 
             //find number of duplicate image links
@@ -201,6 +202,8 @@ namespace WebScraper_CDisney
 
             //Wait for downloads to finish
             int totalTasks = downloadTasks.Count();
+
+            UpdateListView("\n-----\n");
 
             while (downloadTasks.Count() > 0)
             {
@@ -314,8 +317,9 @@ namespace WebScraper_CDisney
             
             
             int totalImages = saveTasks.Count(); //saves total amount of images being saved for output
+            UpdateListView("\n-----\n");
 
-            while(saveTasks.Count() > 0) //saves images and reports when completed
+            while (saveTasks.Count() > 0) //saves images and reports when completed
             {
                 Task task = await Task.WhenAny(saveTasks);
                 UpdateListView($"Finished saving image {totalImages - saveTasks.Count() + 1} / {totalImages}");
