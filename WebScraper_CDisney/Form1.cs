@@ -251,6 +251,7 @@ namespace WebScraper_CDisney
             foreach (CustomImage image in imagesToRemove)
             {
                 _images.Remove(image);
+                UpdateListView($"Removed duplicate image: {image.FileName}");
             }
 
 
@@ -285,6 +286,18 @@ namespace WebScraper_CDisney
                 
             }
 
+            foreach(CustomImage img in _images.Where(x => x.FileName.ToUpper().Contains("SVG")))
+            {
+                string[] parts = img.FileName.Split('?');
+                string newFilename = "";
+                for(int i = 0; i < parts.Length-1; i++)
+                {
+                    newFilename += parts[i];
+                }
+                newFilename += ".svg";
+                img.FileName = newFilename;
+                img.Extension = "svg";
+            }
 
             /******************************************
              *        Save images to location
