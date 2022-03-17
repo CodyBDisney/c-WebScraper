@@ -137,8 +137,7 @@ namespace WebScraper_CDisney
         {
             //reset and prepare again
             UI_Button_Load.Enabled = false;
-            UI_ListBox.Items.Clear();
-            bSource.DataSource = null;
+            
 
             /******************************************
              *   Parse website link from textbox
@@ -161,6 +160,11 @@ namespace WebScraper_CDisney
                 UI_Button_Load.Enabled = true;
                 return;
             }
+
+            //clear data only if link actually works
+            UI_ListBox.Items.Clear();
+            bSource.DataSource = null;
+
 
 
             /******************************************
@@ -292,19 +296,7 @@ namespace WebScraper_CDisney
                 
             }
 
-            foreach(CustomImage img in _images.Where(x => x.FileName.ToUpper().Contains("SVG")))
-            {
-                string[] parts = img.FileName.Split('?');
-                string newFilename = "";
-                for(int i = 0; i < parts.Length-1; i++)
-                {
-                    newFilename += parts[i];
-                }
-                newFilename += ".svg";
-                img.FileName = newFilename;
-                img.Extension = "svg";
-            }
-
+            
 
             /******************************************
              *        Save images to location
@@ -372,7 +364,8 @@ namespace WebScraper_CDisney
                 UpdateListView("Website did not respond");
                 return false;
             }
-            
+
+            //System.Diagnostics.Trace.WriteLine("testing" + x);
             //open a streamreader to read html
             StreamReader rdr = new StreamReader(x);
 
@@ -390,35 +383,22 @@ namespace WebScraper_CDisney
         private List<CustomImage> GetLinks(string file)
         {
             //Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\..*?(/|\\| )*?)*");
-            Regex reg = new Regex("<img.*src( )*=( )*[\"\'](?'link'http[s]?://.*?..*?)[\"\']"); //grabs all image tags from html
+            Regex reg = new Regex("<img.*src( )*=( )*[\"\'](?'link'http[s]?://.*?(.*/)*(?'filename'.*(?'extension'[.][a-zA-Z]*?)))[\"\']"); //grabs all image tags from html
 
             MatchCollection matches = reg.Matches(file);
 
+            //Console.WriteLine("Got regex");
             List<CustomImage> images = new List<CustomImage>();
             foreach (Match match in matches)
             {
                 //linq grabs http or https link from link
-                var link = from l in match.ToString().Split(new char[] {'\"','\'' }) //split on double or single quotes
-                           where l.StartsWith("http")
-                           select l;
-                
-                foreach(string l in link)
-                {
-                    images.Add(new CustomImage(l));
-                }
+                images.Add(new CustomImage(match.Groups["link"].ToString(), match.Groups["filename"].ToString(), match.Groups["extension"].ToString()));
+                //Console.WriteLine("image added");
             }
 
-            return images;
-        }
+            //Console.WriteLine("done adding images");
 
-        /// <summary>
-        /// Updates text in listview, and scrolls to keep up
-        /// </summary>
-        /// <param name="message">message to put into listview</param>
-        private void UpdateListView(string message)
-        {
-            UI_ListBox.Items.Add(message);
-            UI_ListBox.TopIndex = UI_ListBox.Items.Count - 1;
+            return images;
         }
 
         /// <summary>
@@ -434,6 +414,18 @@ namespace WebScraper_CDisney
                 await stream.WriteAsync(img.Bytes, 0, img.Bytes.Length);
             }
         }
+
+        /// <summary>
+        /// Updates text in listview, and scrolls to keep up
+        /// </summary>
+        /// <param name="message">message to put into listview</param>
+        private void UpdateListView(string message)
+        {
+            UI_ListBox.Items.Add(message);
+            UI_ListBox.TopIndex = UI_ListBox.Items.Count - 1;
+        }
+
+        
 
         
     }

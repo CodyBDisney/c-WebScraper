@@ -28,11 +28,11 @@ namespace WebScraper_CDisney
         /// Cosntructor, takes url and parses necessary information
         /// </summary>
         /// <param name="url">url of image being processed</param>
-        public CustomImage(string url)
+        public CustomImage(string url, string filename, string extension)
         {
             Url = url;
-            FileName = url.Split('/').Last();
-            Extension = FileName.Split('.').Last();
+            FileName = filename;
+            Extension = extension;
         }
 
         /// <summary>
