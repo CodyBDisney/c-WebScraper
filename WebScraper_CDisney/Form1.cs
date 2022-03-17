@@ -154,9 +154,9 @@ namespace WebScraper_CDisney
 
             MatchCollection matches = reg.Matches(UI_URLBox.Text);
 
-            string url = matches[0].ToString();
+            string url = matches[0].ToString(); //only grab first url
 
-            if(!await GetWebsite(url))
+            if(!await GetWebsite(url)) //website didnt respond
             {
                 UI_Button_Load.Enabled = true;
                 return;
@@ -186,6 +186,7 @@ namespace WebScraper_CDisney
             int extensionCount = (from n in _images select n.Extension).Distinct().Count();
 
             UpdateListView($"{extensionCount} different image types proccessed.");
+
 
             /******************************************
              *        Get Byte arrays from url   
@@ -225,6 +226,7 @@ namespace WebScraper_CDisney
                 UpdateListView($"Finished retrieving image {totalTasks - downloadTasks.Count()} / {totalTasks}");
 
             }
+
 
             /******************************************
              *       Find duplicate image files    
@@ -272,6 +274,7 @@ namespace WebScraper_CDisney
 
             string folderName = $"{url.Split('/')[2]}_{DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss")}"; //agreed formatting
 
+
             /******************************************
              *      Rename Duplicate image names
              ******************************************/
@@ -302,6 +305,7 @@ namespace WebScraper_CDisney
                 img.Extension = "svg";
             }
 
+
             /******************************************
              *        Save images to location
              ******************************************/
@@ -326,6 +330,7 @@ namespace WebScraper_CDisney
 
                 saveTasks.Remove(task);
             }
+
 
             /******************************************
              *     Display image data to gridview
@@ -356,13 +361,13 @@ namespace WebScraper_CDisney
         {
             //grab html from website url
             WebClient client = new WebClient();
-            Stream x = null;
+            Stream x;
 
             try
             {
                 x = await client.OpenReadTaskAsync(url);
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 UpdateListView("Website did not respond");
                 return false;
