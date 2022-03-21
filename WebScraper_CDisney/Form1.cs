@@ -383,7 +383,7 @@ namespace WebScraper_CDisney
         private List<CustomImage> GetLinks(string file)
         {
             //Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\..*?(/|\\| )*?)*");
-            Regex reg = new Regex("<img.*src( )*=( )*[\"\'](?'link'http[s]?://.*?(.*/)*(?'filename'.*(?'extension'[.][a-zA-Z]*?)))[\"\']"); //grabs all image tags from html
+            Regex reg = new Regex("<img.*src( )*=( )*[\"\'](?'url'http[s]?://.*?(.*/)*(?'filename'.*(?'extension'[.][a-zA-Z]*?)))[\"\']"); //grabs all image tags from html
 
             MatchCollection matches = reg.Matches(file);
 
@@ -392,7 +392,7 @@ namespace WebScraper_CDisney
             foreach (Match match in matches)
             {
                 //linq grabs http or https link from link
-                images.Add(new CustomImage(match.Groups["link"].ToString(), match.Groups["filename"].ToString(), match.Groups["extension"].ToString()));
+                images.Add(new CustomImage(match.Groups["url"].ToString(), match.Groups["filename"].ToString(), match.Groups["extension"].ToString()));
                 //Console.WriteLine("image added");
             }
 
