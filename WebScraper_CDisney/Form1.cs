@@ -361,6 +361,7 @@ namespace WebScraper_CDisney
             }
             catch(Exception)
             {
+                UpdateListView("\n-----\n");
                 UpdateListView("Website did not respond");
                 return false;
             }
@@ -382,6 +383,7 @@ namespace WebScraper_CDisney
         /// <returns>List containing all http or https links</returns>
         private List<CustomImage> GetLinks(string file)
         {
+            //Console.WriteLine("Started Regex");
             //Regex reg = new Regex(@"http[s]?:\/\/.*(?'extension'\..*?(/|\\| )*?)*");
             Regex reg = new Regex("<img.*src( )*=( )*[\"\'](?'url'http[s]?://.*?(.*/)*(?'filename'.*(?'extension'[.][a-zA-Z]*?)))[\"\']"); //grabs all image tags from html
 
@@ -391,7 +393,7 @@ namespace WebScraper_CDisney
             List<CustomImage> images = new List<CustomImage>();
             foreach (Match match in matches)
             {
-                //linq grabs http or https link from link
+                
                 images.Add(new CustomImage(match.Groups["url"].ToString(), match.Groups["filename"].ToString(), match.Groups["extension"].ToString()));
                 //Console.WriteLine("image added");
             }
